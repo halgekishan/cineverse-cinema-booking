@@ -1,0 +1,255 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Book Seats - {{ showtime.movie.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.seat {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px 6px 2px 2px;
+    border: 1px solid var(--border);
+    background: var(--dark4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    position: relative;
+}
+
+.seat:hover:not(.booked) {
+    background: rgba(255,215,0,0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: scale(1.1);
+}
+
+.seat.selected {
+    background: var(--gold) !important;
+    border-color: var(--gold) !important;
+    color: #000 !important;
+}
+
+.seat.booked {
+    background: rgba(229,9,20,0.3) !important;
+    border-color: var(--red) !important;
+    cursor: not-allowed;
+    color: var(--red) !important;
+}
+
+.screen {
+    width: 80%;
+    max-width: 500px;
+    height: 8px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    border-radius: 50%;
+    margin: 0 auto 3rem;
+    position: relative;
+}
+
+.screen::after {
+    content: 'SCREEN';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    color: var(--text-muted);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Select Your Seats</h1>
+    <p>{{ showtime.movie.title }} | {{ showtime.show_date }} | {{ showtime.show_time|time:"g:i A" }} | {{ showtime.hall.name }}</p>
+</div>
+
+<div class="section">
+    <div style="display:grid; grid-template-columns:1fr 340px; gap:2rem; align-items:start;">
+
+        <!-- SEAT MAP -->
+        <div class="card">
+            <div class="screen"></div>
+
+            <form method="post" id="booking-form">
+                {% csrf_token %}
+                <div id="seat-map" style="display:flex; flex-direction:column; gap:0.6rem; align-items:center;"></div>
+
+                <script>
+                const seatData = [
+                    {% for seat in all_seats %}
+                    { id: "{{ seat.seat }}", booked: {% if seat.booked %}true{% else %}false{% endif %} }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ];
+
+                // Group seats by row letter
+                const rows = {};
+                seatData.forEach(s => {
+                    const row = s.id[0];
+                    if (!rows[row]) rows[row] = [];
+                    rows[row].push(s);
+                });
+
+                const map = document.getElementById('seat-map');
+                Object.keys(rows).sort().forEach(rowLetter => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.style.cssText = 'display:flex; gap:0.5rem; align-items:center; justify-content:center;';
+
+                    const label = document.createElement('span');
+                    label.style.cssText = 'width:20px; text-align:center; color:var(--text-muted); font-size:0.8rem; font-weight:700;';
+                    label.textContent = rowLetter;
+                    rowDiv.appendChild(label);
+
+                    rows[rowLetter].forEach(s => {
+                        const seat = document.createElement('div');
+                        seat.className = 'seat' + (s.booked ? ' booked' : '');
+                        seat.title = s.id + (s.booked ? ' - Booked' : '');
+                        seat.textContent = s.id;
+                        if (!s.booked) {
+                            seat.onclick = () => toggleSeat(seat, s.id);
+                        }
+                        rowDiv.appendChild(seat);
+                    });
+
+                    map.appendChild(rowDiv);
+                });
+                </script>
+
+                <!-- LEGEND -->
+                <div style="display:flex; justify-content:center; gap:2rem; margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+                        <div style="width:24px; height:24px; background:var(--dark4); border:1px solid var(--border); border-radius:4px;"></div> Available
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+                        <div style="width:24px; height:24px; background:var(--gold); border-radius:4px;"></div> Selected
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem;">
+                        <div style="width:24px; height:24px; background:rgba(229,9,20,0.3); border:1px solid var(--red); border-radius:4px;"></div> Booked
+                    </div>
+                </div>
+
+                <!-- Hidden selected seats input -->
+                <div id="selected-seats-container"></div>
+            </form>
+        </div>
+
+        <!-- BOOKING FORM -->
+        <div>
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-title">Show Details</div>
+                <div style="display:flex; flex-direction:column; gap:0.6rem; font-size:0.9rem;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Movie</span>
+                        <strong style="color:var(--gold);">{{ showtime.movie.title }}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Date</span>
+                        <span>{{ showtime.show_date }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Time</span>
+                        <span>{{ showtime.show_time|time:"g:i A" }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Hall</span>
+                        <span>{{ showtime.hall.name }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Price/Seat</span>
+                        <span style="color:var(--gold);">₹{{ showtime.ticket_price }}</span>
+                    </div>
+                    <div style="height:1px; background:var(--border);"></div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Available Seats</span>
+                        <span style="color:#28a745;">{{ available_count }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Booked Seats</span>
+                        <span style="color:var(--red);">{{ booked_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Your Details</div>
+                <div id="selected-info" style="margin-bottom:1rem; padding:0.8rem; background:var(--dark4); border-radius:4px; display:none;">
+                    <div style="font-size:0.85rem; color:var(--text-muted);">Selected:</div>
+                    <div id="selected-seats-display" style="color:var(--gold); font-weight:700;"></div>
+                    <div style="margin-top:0.3rem;">Total: <strong style="color:var(--gold);" id="total-display">₹0</strong></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" name="customer_name" required placeholder="Enter your name" form="booking-form">
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="customer_email" required placeholder="your@email.com" form="booking-form">
+                </div>
+                <div class="form-group">
+                    <label>Phone *</label>
+                    <input type="tel" name="customer_phone" required placeholder="+91 00000 00000" form="booking-form">
+                </div>
+                <button type="submit" form="booking-form" class="btn btn-primary" style="width:100%;" id="submit-btn" disabled>
+                    <i class="fas fa-ticket-alt"></i> Confirm Booking
+                </button>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem; text-align:center;">
+                    Please select at least one seat to proceed
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const ticketPrice = {{ showtime.ticket_price }};
+let selectedSeats = [];
+
+function toggleSeat(el, seatId) {
+    const idx = selectedSeats.indexOf(seatId);
+    if (idx > -1) {
+        selectedSeats.splice(idx, 1);
+        el.classList.remove('selected');
+    } else {
+        selectedSeats.push(seatId);
+        el.classList.add('selected');
+    }
+    updateSummary();
+}
+
+function updateSummary() {
+    const container = document.getElementById('selected-seats-container');
+    container.innerHTML = '';
+    selectedSeats.forEach(s => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'seats';
+        input.value = s;
+        container.appendChild(input);
+    });
+
+    const info = document.getElementById('selected-info');
+    const display = document.getElementById('selected-seats-display');
+    const total = document.getElementById('total-display');
+    const btn = document.getElementById('submit-btn');
+
+    if (selectedSeats.length > 0) {
+        info.style.display = 'block';
+        display.textContent = selectedSeats.join(', ');
+        total.textContent = '₹' + (ticketPrice * selectedSeats.length).toFixed(2);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-ticket-alt"></i> Book ' + selectedSeats.length + ' Seat(s)';
+    } else {
+        info.style.display = 'none';
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-ticket-alt"></i> Confirm Booking';
+    }
+}
+</script>
+{% endblock %}

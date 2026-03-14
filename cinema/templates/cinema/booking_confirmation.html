@@ -1,0 +1,77 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Booking Confirmed - CineVerse{% endblock %}
+
+{% block content %}
+<div class="section" style="max-width:700px;">
+    <div class="card" style="text-align:center; padding:3rem;">
+        <div style="font-size:4rem; margin-bottom:1rem;">🎉</div>
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:#28a745; letter-spacing:3px;">BOOKING CONFIRMED!</div>
+        <p style="color:var(--text-muted); margin:0.5rem 0 2rem;">Your tickets have been booked successfully.</p>
+
+        <div style="background:var(--dark4); border-radius:8px; padding:1.5rem; margin-bottom:2rem; text-align:left;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Reference</div>
+                    <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--gold); letter-spacing:2px;">{{ booking.booking_reference }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Status</div>
+                    <div style="color:#28a745; font-weight:700; text-transform:uppercase;">✓ {{ booking.get_status_display }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Movie</div>
+                    <div style="font-weight:700;">{{ booking.showtime.movie.title }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Hall</div>
+                    <div>{{ booking.showtime.hall.name }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Date & Time</div>
+                    <div>{{ booking.showtime.show_date }} | {{ booking.showtime.show_time|time:"g:i A" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Customer</div>
+                    <div>{{ booking.customer_name }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Seats</div>
+                    <div style="color:var(--gold); font-weight:700;">{{ seats|join:", " }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Total Amount</div>
+                    <div style="color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:1.3rem;">₹{{ booking.total_amount }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Payment Method</div>
+                    <div style="font-weight:600;">{{ booking.get_payment_method_display }}</div>
+                </div>
+                <div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Payment Status</div>
+                    <div style="color:{% if booking.payment_status == 'paid' %}#28a745{% else %}#ffc107{% endif %}; font-weight:700; text-transform:uppercase;">
+                        {% if booking.payment_status == 'paid' %}✓ Paid{% else %}⏳ Pay at Counter{% endif %}
+                    </div>
+                </div>
+                {% if booking.transaction_id %}
+                <div style="grid-column:1/-1;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase;">Transaction ID</div>
+                    <div style="font-family:monospace; color:var(--gold); font-size:0.9rem;">{{ booking.transaction_id }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="background:rgba(255,215,0,0.05); border:1px dashed var(--gold); border-radius:8px; padding:1rem; margin-bottom:2rem; font-size:0.85rem; color:var(--text-muted);">
+            <i class="fas fa-info-circle" style="color:var(--gold);"></i>
+            Please save your booking reference <strong style="color:var(--gold);">{{ booking.booking_reference }}</strong> to retrieve your ticket.
+        </div>
+
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="{% url 'movie_list' %}" class="btn btn-outline">Book More Tickets</a>
+            <a href="{% url 'feedback' %}" class="btn btn-gold"><i class="fas fa-star"></i> Leave Feedback</a>
+            <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Print Ticket</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

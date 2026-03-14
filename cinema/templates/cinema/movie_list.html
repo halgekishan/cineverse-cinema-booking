@@ -1,0 +1,68 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Movies - CineVerse{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{% if status == 'now_showing' %}Now Showing{% else %}Upcoming Movies{% endif %}</h1>
+    <p>Browse and book your favourite movies</p>
+</div>
+
+<div class="section">
+    <!-- FILTER BAR -->
+    <div style="display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap; align-items:center;">
+        <a href="{% url 'movie_list' %}?status=now_showing{% if selected_genre %}&genre={{ selected_genre }}{% endif %}"
+           class="btn {% if status == 'now_showing' %}btn-primary{% else %}btn-outline{% endif %}" style="padding:0.5rem 1.2rem;">
+            Now Showing
+        </a>
+        <a href="{% url 'movie_list' %}?status=upcoming{% if selected_genre %}&genre={{ selected_genre }}{% endif %}"
+           class="btn {% if status == 'upcoming' %}btn-primary{% else %}btn-outline{% endif %}" style="padding:0.5rem 1.2rem;">
+            Upcoming
+        </a>
+
+        <form method="get" style="display:flex; gap:0.5rem; margin-left:auto;">
+            <input type="hidden" name="status" value="{{ status }}">
+            <select name="genre" onchange="this.form.submit()" style="width:auto; padding:0.5rem 1rem;">
+                <option value="">All Genres</option>
+                {% for g in genres %}
+                <option value="{{ g }}" {% if g == selected_genre %}selected{% endif %}>{{ g }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    {% if movies %}
+    <div class="movie-grid">
+        {% for movie in movies %}
+        <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
+            {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+            {% else %}
+                <div class="movie-poster-placeholder"><i class="fas fa-film"></i></div>
+            {% endif %}
+            <div class="movie-info">
+                <div style="margin-bottom:0.4rem;">
+                    <span class="badge badge-{% if movie.status == 'now_showing' %}now{% else %}upcoming{% endif %}">
+                        {{ movie.get_status_display }}
+                    </span>
+                </div>
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-meta">
+                    <span>{{ movie.genre }}</span>
+                    <span>{{ movie.duration }}min</span>
+                </div>
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.3rem;">
+                    {{ movie.language }} · {{ movie.rating }}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+        <i class="fas fa-film" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
+        <p>No movies found. Check back soon!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

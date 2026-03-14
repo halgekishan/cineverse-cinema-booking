@@ -1,0 +1,78 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Check Booking - CineVerse{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Check Your Booking</h1>
+    <p>Enter your booking reference to retrieve ticket details</p>
+</div>
+
+<div class="section" style="max-width:600px;">
+    <div class="card">
+        <div class="card-title">Find My Booking</div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Booking Reference</label>
+                <input type="text" name="reference" placeholder="e.g. CIN12345678" required style="text-transform:uppercase; letter-spacing:2px; font-size:1.1rem;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+                <i class="fas fa-search"></i> Find Booking
+            </button>
+        </form>
+    </div>
+
+    {% if booking %}
+    <div class="card" style="margin-top:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <div class="card-title" style="margin-bottom:0;">Booking Details</div>
+            <span style="color:{% if booking.status == 'confirmed' %}#28a745{% elif booking.status == 'cancelled' %}var(--red){% else %}#ffc107{% endif %}; font-weight:700; text-transform:uppercase; font-size:0.9rem;">
+                {% if booking.status == 'confirmed' %}✓{% elif booking.status == 'cancelled' %}✗{% else %}⏳{% endif %}
+                {{ booking.get_status_display }}
+            </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; font-size:0.9rem;">
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Reference</div>
+                <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold);">{{ booking.booking_reference }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Customer</div>
+                <div style="font-weight:600;">{{ booking.customer_name }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Movie</div>
+                <div style="font-weight:600; color:var(--gold);">{{ booking.showtime.movie.title }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Hall</div>
+                <div>{{ booking.showtime.hall.name }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Date</div>
+                <div>{{ booking.showtime.show_date }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Time</div>
+                <div>{{ booking.showtime.show_time|time:"g:i A" }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Seats</div>
+                <div style="color:var(--gold); font-weight:700;">{{ booking.seat_numbers }}</div>
+            </div>
+            <div>
+                <div style="color:var(--text-muted); font-size:0.75rem; letter-spacing:1px; text-transform:uppercase;">Amount Paid</div>
+                <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold);">₹{{ booking.total_amount }}</div>
+            </div>
+        </div>
+
+        <div style="margin-top:1.5rem; display:flex; gap:1rem; flex-wrap:wrap;">
+            <button onclick="window.print()" class="btn btn-outline"><i class="fas fa-print"></i> Print Ticket</button>
+            <a href="{% url 'feedback' %}" class="btn btn-gold"><i class="fas fa-star"></i> Leave Review</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

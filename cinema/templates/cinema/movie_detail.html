@@ -1,0 +1,131 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}{{ movie.title }} - CineVerse{% endblock %}
+
+{% block content %}
+<div style="background:var(--dark2); border-bottom:1px solid var(--border);">
+    <div style="max-width:1300px; margin:0 auto; padding:2rem; display:grid; grid-template-columns:280px 1fr; gap:2.5rem;">
+        <!-- POSTER -->
+        <div>
+            {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" style="width:100%; border-radius:8px; border:2px solid var(--border);">
+            {% else %}
+                <div style="width:100%; aspect-ratio:2/3; background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--gold);">
+                    <i class="fas fa-film"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- INFO -->
+        <div>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+                <span class="badge badge-{% if movie.status == 'now_showing' %}now{% else %}upcoming{% endif %}">
+                    {{ movie.get_status_display }}
+                </span>
+                <span class="badge badge-genre">{{ movie.genre }}</span>
+                <span class="badge badge-genre">{{ movie.rating }}</span>
+                <span class="badge badge-genre">{{ movie.language }}</span>
+            </div>
+
+            <h1 style="font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--gold); letter-spacing:3px; line-height:1; margin-bottom:0.5rem;">{{ movie.title }}</h1>
+
+            <div style="display:flex; gap:2rem; color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+                <span><i class="fas fa-clock"></i> {{ movie.duration }} minutes</span>
+                <span><i class="fas fa-calendar"></i> {{ movie.release_date }}</span>
+                {% if movie.director %}<span><i class="fas fa-user-tie"></i> {{ movie.director }}</span>{% endif %}
+            </div>
+
+            <p style="color:var(--text); line-height:1.8; margin-bottom:1.5rem; font-size:1rem; font-family:'Inter',sans-serif; font-weight:300;">{{ movie.description }}</p>
+
+            {% if cast_list %}
+            <div style="margin-bottom:1.5rem;">
+                <div style="font-size:0.8rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:0.5rem;">Cast</div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    {% for member in cast_list %}
+                    <span style="background:var(--dark4); padding:3px 10px; border-radius:20px; font-size:0.85rem; border:1px solid var(--border);">{{ member }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if avg_rating %}
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+                <span class="stars" style="font-size:1.3rem;">
+                    {% for i in "12345" %}{% if forloop.counter <= avg_rating|floatformat:"0"|add:"0" %}★{% else %}☆{% endif %}{% endfor %}
+                </span>
+                <span style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--gold);">{{ avg_rating|floatformat:1 }}</span>
+                <span style="color:var(--text-muted); font-size:0.9rem;">({{ feedbacks.count }} reviews)</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+
+        <!-- TRAILER -->
+        {% if movie.trailer_url %}
+        <div>
+            <h2 class="section-title" style="margin-bottom:1rem;"><span class="accent">🎬</span> Trailer</h2>
+            <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; border:1px solid var(--border);">
+                <iframe src="{{ movie.trailer_url }}" style="position:absolute; top:0; left:0; width:100%; height:100%;" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SHOWTIMES -->
+        <div>
+            <h2 class="section-title" style="margin-bottom:1rem;"><span class="accent">🕐</span> Book Tickets</h2>
+            {% if showtimes %}
+                {% regroup showtimes by show_date as date_list %}
+                {% for date in date_list %}
+                <div style="margin-bottom:1.5rem;">
+                    <div style="font-size:0.8rem; color:var(--text-muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:0.8rem;">{{ date.grouper }}</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.8rem;">
+                        {% for show in date.list %}
+                        <a href="{% url 'book_ticket' show.pk %}" style="text-decoration:none;">
+                            <div style="background:var(--dark3); border:1px solid var(--border); border-radius:6px; padding:0.7rem 1.2rem; transition:all 0.2s; cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)'; this.style.background='rgba(255,215,0,0.08)'" onmouseout="this.style.borderColor='var(--border)'; this.style.background='var(--dark3)'">
+                                <div style="font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:var(--gold);">{{ show.show_time|time:"g:i A" }}</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted);">{{ show.hall.name }}</div>
+                                <div style="font-size:0.8rem; margin-top:0.3rem;">
+                                    <span style="color:{% if show.available_seats > 10 %}#28a745{% elif show.available_seats > 0 %}#ffc107{% else %}var(--red){% endif %};">
+                                        {% if show.available_seats > 0 %}{{ show.available_seats }} seats left{% else %}HOUSEFULL{% endif %}
+                                    </span>
+                                </div>
+                                <div style="font-size:0.8rem; color:var(--gold-dark); margin-top:0.2rem;">₹{{ show.ticket_price }}</div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card" style="text-align:center; color:var(--text-muted);">
+                    <i class="fas fa-calendar-times" style="font-size:2rem; margin-bottom:0.5rem;"></i>
+                    <p>No shows scheduled yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- REVIEWS -->
+    {% if feedbacks %}
+    <div style="margin-top:3rem;">
+        <h2 class="section-title"><span class="accent">⭐</span> Customer Reviews</h2>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.2rem;">
+            {% for fb in feedbacks %}
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <strong>{{ fb.customer_name }}</strong>
+                    <span class="stars">{% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+                </div>
+                <p style="color:var(--text-muted); font-size:0.9rem; font-style:italic;">"{{ fb.comment }}"</p>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.5rem;">{{ fb.created_at|date:"M d, Y" }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

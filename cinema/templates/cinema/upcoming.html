@@ -1,0 +1,63 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Upcoming Movies - CineVerse{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Upcoming Movies</h1>
+    <p>Get ready for the next big releases</p>
+</div>
+
+<div class="section">
+    {% if movies %}
+    <div style="display:flex; flex-direction:column; gap:2rem;">
+        {% for movie in movies %}
+        <div class="card" style="display:grid; grid-template-columns:160px 1fr; gap:1.5rem; overflow:hidden;">
+            <a href="{% url 'movie_detail' movie.pk %}" style="display:block;">
+                {% if movie.poster %}
+                    <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" style="width:100%; border-radius:6px; aspect-ratio:2/3; object-fit:cover;">
+                {% else %}
+                    <div style="width:100%; aspect-ratio:2/3; background:linear-gradient(135deg,#1a1a2e,#0f3460); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:3rem; color:var(--gold);">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                {% endif %}
+            </a>
+            <div style="padding:0.5rem 0;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.8rem;">
+                    <span class="badge badge-upcoming">{{ movie.release_date }}</span>
+                    <span class="badge badge-genre">{{ movie.genre }}</span>
+                    <span class="badge badge-genre">{{ movie.language }}</span>
+                    <span class="badge badge-genre">{{ movie.rating }}</span>
+                </div>
+                <a href="{% url 'movie_detail' movie.pk %}" style="text-decoration:none;">
+                    <h2 style="font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--gold); letter-spacing:2px; margin-bottom:0.5rem;">{{ movie.title }}</h2>
+                </a>
+                {% if movie.director %}
+                <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.8rem;"><i class="fas fa-user-tie"></i> {{ movie.director }}</div>
+                {% endif %}
+                <p style="color:var(--text-muted); font-size:0.95rem; line-height:1.7; margin-bottom:1rem; font-family:'Inter',sans-serif; font-weight:300;">
+                    {{ movie.description|truncatewords:40 }}
+                </p>
+                <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+                    <span style="color:var(--text-muted); font-size:0.85rem;"><i class="fas fa-clock"></i> {{ movie.duration }} min</span>
+                    <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-outline" style="padding:0.4rem 1rem; font-size:0.8rem;">
+                        <i class="fas fa-info-circle"></i> More Info
+                    </a>
+                    {% if movie.trailer_url %}
+                    <a href="{% url 'movie_detail' movie.pk %}" class="btn btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem;">
+                        <i class="fas fa-play"></i> Watch Trailer
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align:center; padding:4rem; color:var(--text-muted);">
+        <i class="fas fa-calendar-times" style="font-size:3rem; margin-bottom:1rem; display:block;"></i>
+        <p>No upcoming movies at the moment. Check back soon!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

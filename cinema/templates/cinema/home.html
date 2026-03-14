@@ -1,0 +1,151 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}CineVerse - Home{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+    <div style="position:relative; z-index:1;">
+        <div class="hero-title">WELCOME TO <span>CINEVERSE</span></div>
+        <p class="hero-sub">Experience Cinema Like Never Before</p>
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="{% url 'movie_list' %}" class="btn btn-primary"><i class="fas fa-ticket-alt"></i> Book Tickets</a>
+            <a href="{% url 'upcoming' %}" class="btn btn-outline"><i class="fas fa-calendar"></i> Upcoming Movies</a>
+        </div>
+        <div style="display:flex; gap:3rem; justify-content:center; margin-top:3rem; flex-wrap:wrap;">
+            <div style="text-align:center;">
+                <div style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--gold);">{{ now_showing|length }}+</div>
+                <div style="color:var(--text-muted); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;">Movies Showing</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--gold);">{{ upcoming|length }}+</div>
+                <div style="color:var(--text-muted); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;">Coming Soon</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-family:'Bebas Neue',sans-serif; font-size:2.5rem; color:var(--gold);">
+                    {% if avg_rating %}{{ avg_rating|floatformat:1 }}★{% else %}5★{% endif %}
+                </div>
+                <div style="color:var(--text-muted); font-size:0.8rem; letter-spacing:2px; text-transform:uppercase;">Avg Rating</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NOW SHOWING -->
+{% if now_showing %}
+<div class="section">
+    <h2 class="section-title"><span class="accent">🎬</span> Now Showing</h2>
+    <div class="movie-grid">
+        {% for movie in now_showing %}
+        <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
+            {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+            {% else %}
+                <div class="movie-poster-placeholder">
+                    <i class="fas fa-film"></i>
+                </div>
+            {% endif %}
+            <div class="movie-info">
+                <div style="margin-bottom:0.4rem;"><span class="badge badge-now">Now Showing</span></div>
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-meta">
+                    <span>{{ movie.genre }}</span>
+                    <span>{{ movie.duration }}min</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+        <a href="{% url 'movie_list' %}" class="btn btn-outline">View All Movies</a>
+    </div>
+</div>
+{% endif %}
+
+<div style="height:1px; background:var(--border); max-width:1300px; margin:0 auto;"></div>
+
+<!-- UPCOMING -->
+{% if upcoming %}
+<div class="section">
+    <h2 class="section-title"><span class="accent">📅</span> Coming Soon</h2>
+    <div class="movie-grid">
+        {% for movie in upcoming %}
+        <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
+            {% if movie.poster %}
+                <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+            {% else %}
+                <div class="movie-poster-placeholder">
+                    <i class="fas fa-calendar-plus"></i>
+                </div>
+            {% endif %}
+            <div class="movie-info">
+                <div style="margin-bottom:0.4rem;"><span class="badge badge-upcoming">{{ movie.release_date }}</span></div>
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-meta">
+                    <span>{{ movie.genre }}</span>
+                    <span>{{ movie.language }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+        <a href="{% url 'upcoming' %}" class="btn btn-outline">See All Upcoming</a>
+    </div>
+</div>
+{% endif %}
+
+<div style="height:1px; background:var(--border); max-width:1300px; margin:0 auto;"></div>
+
+<!-- FEATURES -->
+<div class="section">
+    <h2 class="section-title"><span class="accent">✨</span> Why CineVerse</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1.5rem;">
+        {% for icon, title, desc in feat %}
+        {% endfor %}
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:1rem;">🎭</div>
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); letter-spacing:2px;">PREMIUM SCREENS</div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Crystal clear 4K projection & Dolby Atmos sound</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:1rem;">🎟️</div>
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); letter-spacing:2px;">EASY BOOKING</div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Select your seats and book in under a minute</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:1rem;">🍿</div>
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); letter-spacing:2px;">GOURMET SNACKS</div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Premium popcorn, nachos & a full beverages menu</p>
+        </div>
+        <div class="card" style="text-align:center;">
+            <div style="font-size:2.5rem; margin-bottom:1rem;">⭐</div>
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); letter-spacing:2px;">TOP RATED</div>
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;">Loved by thousands of movie enthusiasts</p>
+        </div>
+    </div>
+</div>
+
+<!-- FEEDBACK PREVIEW -->
+{% if feedbacks %}
+<div class="section">
+    <h2 class="section-title"><span class="accent">💬</span> What Customers Say</h2>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem;">
+        {% for fb in feedbacks %}
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                <div style="font-weight:700; font-size:1.05rem;">{{ fb.customer_name }}</div>
+                <div class="stars">{% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+            </div>
+            {% if fb.movie %}<div style="font-size:0.8rem; color:var(--gold); margin-bottom:0.5rem;">{{ fb.movie.title }}</div>{% endif %}
+            <p style="color:var(--text-muted); font-size:0.9rem; font-style:italic;">"{{ fb.comment|truncatewords:20 }}"</p>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.8rem;">{{ fb.created_at|date:"M d, Y" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="text-align:center; margin-top:2rem;">
+        <a href="{% url 'feedback' %}" class="btn btn-outline">Leave Your Feedback</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

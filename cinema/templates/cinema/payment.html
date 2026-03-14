@@ -1,0 +1,413 @@
+{% extends 'cinema/base.html' %}
+
+{% block title %}Payment - CineVerse{% endblock %}
+
+{% block extra_css %}
+<style>
+.pay-method-btn {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.2rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--dark3);
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+}
+.pay-method-btn:hover { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+.pay-method-btn.active { border-color: var(--gold); background: rgba(255,215,0,0.1); }
+.pay-method-btn .icon {
+    font-size: 1.6rem;
+    width: 40px;
+    text-align: center;
+}
+.pay-method-btn .label { flex: 1; }
+.pay-method-btn .label span {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+.pay-panel { display: none; margin-top: 1.5rem; }
+.pay-panel.active { display: block; }
+
+.card-input-wrapper {
+    position: relative;
+}
+.card-input-wrapper .card-icons {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 4px;
+    font-size: 1.2rem;
+}
+
+.bank-option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--dark4);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+.bank-option:hover, .bank-option.selected {
+    border-color: var(--gold);
+    background: rgba(255,215,0,0.07);
+    color: var(--gold);
+}
+
+.processing-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+.processing-overlay.show { display: flex; }
+.spinner {
+    width: 60px; height: 60px;
+    border: 4px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.steps {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 2rem;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.step.done { color: #28a745; }
+.step.active { color: var(--gold); font-weight: 700; }
+.step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+    background: var(--dark4);
+    border: 2px solid var(--border);
+}
+.step.done .step-num { background: #28a745; border-color: #28a745; color: #fff; }
+.step.active .step-num { background: var(--gold); border-color: var(--gold); color: #000; }
+.step-line { width: 50px; height: 2px; background: var(--border); margin: 0 0.3rem; }
+.step.done + .step-line { background: #28a745; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Processing overlay -->
+<div class="processing-overlay" id="processingOverlay">
+    <div class="spinner"></div>
+    <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--gold); letter-spacing:3px;" id="processingText">PROCESSING PAYMENT...</div>
+    <div style="color:var(--text-muted); font-size:0.85rem;">Please do not close this window</div>
+</div>
+
+<div class="page-header">
+    <h1>Secure Payment</h1>
+    <p>Complete your booking for {{ showtime.movie.title }}</p>
+</div>
+
+<div class="section">
+    <!-- STEPS -->
+    <div class="steps">
+        <div class="step done">
+            <div class="step-num">✓</div> Select Seats
+        </div>
+        <div class="step-line"></div>
+        <div class="step done">
+            <div class="step-num">✓</div> Your Details
+        </div>
+        <div class="step-line"></div>
+        <div class="step active">
+            <div class="step-num">3</div> Payment
+        </div>
+        <div class="step-line"></div>
+        <div class="step">
+            <div class="step-num">4</div> Confirmation
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 360px; gap:2rem; align-items:start;">
+
+        <!-- PAYMENT METHODS -->
+        <div>
+            <div class="card">
+                <div class="card-title">Choose Payment Method</div>
+
+                <form method="post" id="payment-form" onsubmit="handlePayment(event)">
+                    {% csrf_token %}
+                    <input type="hidden" name="payment_method" id="payment_method_input" value="upi">
+
+                    <!-- METHOD BUTTONS -->
+                    <div style="display:flex; flex-direction:column; gap:0.8rem; margin-bottom:1.5rem;">
+                        <button type="button" class="pay-method-btn active" onclick="selectMethod('upi', this)">
+                            <span class="icon">📱</span>
+                            <span class="label">UPI <span>Google Pay, PhonePe, Paytm, BHIM</span></span>
+                            <span style="font-size:0.75rem; color:var(--gold);">Instant</span>
+                        </button>
+                        <button type="button" class="pay-method-btn" onclick="selectMethod('card', this)">
+                            <span class="icon">💳</span>
+                            <span class="label">Credit / Debit Card <span>Visa, Mastercard, RuPay, Amex</span></span>
+                            <span style="font-size:0.75rem; color:#28a745;">Secure</span>
+                        </button>
+                        <button type="button" class="pay-method-btn" onclick="selectMethod('netbanking', this)">
+                            <span class="icon">🏦</span>
+                            <span class="label">Net Banking <span>All major Indian banks supported</span></span>
+                        </button>
+                        <button type="button" class="pay-method-btn" onclick="selectMethod('counter', this)">
+                            <span class="icon">🎫</span>
+                            <span class="label">Pay at Counter <span>Pay cash at cinema box office</span></span>
+                        </button>
+                    </div>
+
+                    <!-- UPI PANEL -->
+                    <div class="pay-panel active" id="panel-upi">
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; letter-spacing:1px; text-transform:uppercase;">Enter UPI Details</div>
+                        <div class="form-group">
+                            <label>UPI ID *</label>
+                            <input type="text" name="upi_id" placeholder="yourname@upi or 9999999999@paytm" id="upi_id_input">
+                        </div>
+                        <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:0.5rem;">
+                            {% for app, color, emoji in upi_apps %}{% endfor %}
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.3rem; cursor:pointer;" onclick="document.getElementById('upi_id_input').placeholder='9999999999@paytm'">
+                                <div style="width:50px; height:50px; background:#00b9f1; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">💙</div>
+                                <span style="font-size:0.72rem; color:var(--text-muted);">Paytm</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.3rem; cursor:pointer;" onclick="document.getElementById('upi_id_input').placeholder='yourname@okaxis'">
+                                <div style="width:50px; height:50px; background:#00a651; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">📲</div>
+                                <span style="font-size:0.72rem; color:var(--text-muted);">PhonePe</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.3rem; cursor:pointer;" onclick="document.getElementById('upi_id_input').placeholder='yourname@okicici'">
+                                <div style="width:50px; height:50px; background:#4285f4; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">🔵</div>
+                                <span style="font-size:0.72rem; color:var(--text-muted);">GPay</span>
+                            </div>
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:0.3rem; cursor:pointer;" onclick="document.getElementById('upi_id_input').placeholder='yourname@upi'">
+                                <div style="width:50px; height:50px; background:#ff6600; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">🏛️</div>
+                                <span style="font-size:0.72rem; color:var(--text-muted);">BHIM</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:1rem; padding:0.8rem; background:rgba(40,167,69,0.1); border:1px solid rgba(40,167,69,0.3); border-radius:6px; font-size:0.8rem; color:#28a745;">
+                            🔒 Payments are processed securely. Your UPI PIN is never shared.
+                        </div>
+                    </div>
+
+                    <!-- CARD PANEL -->
+                    <div class="pay-panel" id="panel-card">
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; letter-spacing:1px; text-transform:uppercase;">Enter Card Details</div>
+                        <div class="form-group">
+                            <label>Card Number *</label>
+                            <div class="card-input-wrapper">
+                                <input type="text" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNumber(this)" id="card_number_input">
+                                <div class="card-icons">💳</div>
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="form-group">
+                                <label>Expiry Date *</label>
+                                <input type="text" name="card_expiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(this)">
+                            </div>
+                            <div class="form-group">
+                                <label>CVV *</label>
+                                <input type="password" name="card_cvv" placeholder="•••" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Name on Card *</label>
+                            <input type="text" name="card_name" placeholder="As printed on card">
+                        </div>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.5rem; flex-wrap:wrap;">
+                            <span style="background:var(--dark4); padding:4px 10px; border-radius:4px; font-size:0.75rem; border:1px solid var(--border);">VISA</span>
+                            <span style="background:var(--dark4); padding:4px 10px; border-radius:4px; font-size:0.75rem; border:1px solid var(--border);">Mastercard</span>
+                            <span style="background:var(--dark4); padding:4px 10px; border-radius:4px; font-size:0.75rem; border:1px solid var(--border);">RuPay</span>
+                            <span style="background:var(--dark4); padding:4px 10px; border-radius:4px; font-size:0.75rem; border:1px solid var(--border);">Amex</span>
+                        </div>
+                        <div style="margin-top:1rem; padding:0.8rem; background:rgba(40,167,69,0.1); border:1px solid rgba(40,167,69,0.3); border-radius:6px; font-size:0.8rem; color:#28a745;">
+                            🔒 256-bit SSL encrypted. Your card details are never stored.
+                        </div>
+                    </div>
+
+                    <!-- NET BANKING PANEL -->
+                    <div class="pay-panel" id="panel-netbanking">
+                        <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem; letter-spacing:1px; text-transform:uppercase;">Select Your Bank</div>
+                        <input type="hidden" name="bank" id="bank_input" value="">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; margin-bottom:1rem;" id="bank-grid">
+                            {% for bank_code, bank_name, emoji in banks %}{% endfor %}
+                            <div class="bank-option" onclick="selectBank('sbi', this)">🏦 State Bank of India</div>
+                            <div class="bank-option" onclick="selectBank('hdfc', this)">🏦 HDFC Bank</div>
+                            <div class="bank-option" onclick="selectBank('icici', this)">🏦 ICICI Bank</div>
+                            <div class="bank-option" onclick="selectBank('axis', this)">🏦 Axis Bank</div>
+                            <div class="bank-option" onclick="selectBank('kotak', this)">🏦 Kotak Mahindra</div>
+                            <div class="bank-option" onclick="selectBank('pnb', this)">🏦 Punjab National Bank</div>
+                            <div class="bank-option" onclick="selectBank('bob', this)">🏦 Bank of Baroda</div>
+                            <div class="bank-option" onclick="selectBank('yes', this)">🏦 Yes Bank</div>
+                        </div>
+                    </div>
+
+                    <!-- COUNTER PANEL -->
+                    <div class="pay-panel" id="panel-counter">
+                        <div style="background:rgba(255,215,0,0.07); border:1px solid var(--border); border-radius:8px; padding:1.5rem; text-align:center;">
+                            <div style="font-size:3rem; margin-bottom:0.8rem;">🎟️</div>
+                            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:var(--gold); letter-spacing:2px; margin-bottom:0.5rem;">PAY AT COUNTER</div>
+                            <p style="color:var(--text-muted); font-size:0.9rem; line-height:1.7;">
+                                Your booking will be reserved for <strong style="color:var(--gold);">30 minutes</strong>.<br>
+                                Please visit the cinema box office and quote your <strong>booking reference</strong> to pay and collect your tickets.
+                            </p>
+                            <div style="margin-top:1rem; font-size:0.85rem; color:var(--text-muted);">
+                                ⏰ Counter opens 1 hour before each show
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PAY BUTTON -->
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:1.5rem; padding:1rem; font-size:1.1rem;" id="pay-btn">
+                        <i class="fas fa-lock"></i> Pay ₹{{ pending.total_amount|floatformat:2 }}
+                    </button>
+                    <a href="{% url 'book_ticket' showtime.pk %}" style="display:block; text-align:center; margin-top:0.8rem; color:var(--text-muted); font-size:0.85rem; text-decoration:none;">
+                        ← Go back and change seats
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div>
+            <div class="card" style="position:sticky; top:80px;">
+                <div class="card-title">Order Summary</div>
+
+                <div style="display:flex; gap:0.8rem; margin-bottom:1.2rem; padding-bottom:1.2rem; border-bottom:1px solid var(--border);">
+                    <div style="width:50px; height:70px; background:linear-gradient(135deg,#1a1a2e,#0f3460); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0;">🎬</div>
+                    <div>
+                        <div style="font-weight:700; font-size:1rem; color:var(--gold);">{{ showtime.movie.title }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem;">{{ showtime.show_date }} · {{ showtime.show_time|time:"g:i A" }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);">{{ showtime.hall.name }}</div>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:0.7rem; font-size:0.9rem;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Customer</span>
+                        <span>{{ pending.customer_name }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Seats</span>
+                        <span style="color:var(--gold); font-weight:700;">{{ pending.selected_seats|join:", " }}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Qty</span>
+                        <span>{{ pending.selected_seats|length }} seat(s)</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="color:var(--text-muted);">Price/seat</span>
+                        <span>₹{{ showtime.ticket_price }}</span>
+                    </div>
+                    <div style="height:1px; background:var(--border);"></div>
+                    <div style="display:flex; justify-content:space-between; font-size:1.1rem;">
+                        <span style="font-weight:700;">Total</span>
+                        <span style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--gold);">₹{{ pending.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem; padding:0.8rem; background:rgba(40,167,69,0.07); border-radius:6px; font-size:0.78rem; color:var(--text-muted); text-align:center; line-height:1.6;">
+                    🔒 100% Secure Payment<br>
+                    Encrypted with 256-bit SSL
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+let currentMethod = 'upi';
+
+function selectMethod(method, btn) {
+    // Toggle active button style
+    document.querySelectorAll('.pay-method-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Show/hide panels
+    document.querySelectorAll('.pay-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + method).classList.add('active');
+
+    // Update hidden input
+    document.getElementById('payment_method_input').value = method;
+    currentMethod = method;
+
+    // Update pay button text
+    const total = '₹{{ pending.total_amount|floatformat:2 }}';
+    const btn2 = document.getElementById('pay-btn');
+    if (method === 'counter') {
+        btn2.innerHTML = '<i class="fas fa-ticket-alt"></i> Reserve Seats (Pay at Counter)';
+    } else {
+        btn2.innerHTML = '<i class="fas fa-lock"></i> Pay ' + total;
+    }
+}
+
+function selectBank(bankCode, el) {
+    document.querySelectorAll('.bank-option').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('bank_input').value = bankCode;
+}
+
+function formatCardNumber(input) {
+    let v = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatExpiry(input) {
+    let v = input.value.replace(/\D/g, '').substring(0, 4);
+    if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2);
+    input.value = v;
+}
+
+function handlePayment(e) {
+    e.preventDefault();
+    const overlay = document.getElementById('processingOverlay');
+    const txt = document.getElementById('processingText');
+
+    if (currentMethod === 'counter') {
+        txt.textContent = 'RESERVING YOUR SEATS...';
+        overlay.classList.add('show');
+        setTimeout(() => { e.target.submit(); }, 1500);
+        return;
+    }
+
+    overlay.classList.add('show');
+    txt.textContent = 'CONNECTING TO BANK...';
+    setTimeout(() => { txt.textContent = 'VERIFYING PAYMENT...'; }, 1000);
+    setTimeout(() => { txt.textContent = 'CONFIRMING BOOKING...'; }, 2200);
+    setTimeout(() => { e.target.submit(); }, 3000);
+}
+</script>
+{% endblock %}

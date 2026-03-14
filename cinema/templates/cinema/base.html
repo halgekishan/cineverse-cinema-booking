@@ -1,0 +1,439 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CineVerse - Premium Cinema Experience{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --gold: #FFD700;
+            --gold-dark: #B8860B;
+            --red: #E50914;
+            --dark: #0A0A0A;
+            --dark2: #111111;
+            --dark3: #1A1A1A;
+            --dark4: #222222;
+            --text: #E8E8E8;
+            --text-muted: #888;
+            --border: rgba(255,215,0,0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--dark);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* NAVBAR */
+        nav {
+            background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(10,10,10,0.95) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-inner {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--gold);
+            text-decoration: none;
+            letter-spacing: 3px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span { color: var(--red); }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--gold);
+            background: rgba(255,215,0,0.08);
+        }
+
+        .btn-book {
+            background: var(--red) !important;
+            color: #fff !important;
+            padding: 0.5rem 1.2rem !important;
+            border-radius: 4px;
+        }
+
+        .btn-book:hover {
+            background: #c4070f !important;
+            color: #fff !important;
+        }
+
+        /* MAIN */
+        main {
+            min-height: calc(100vh - 70px);
+        }
+
+        /* HERO */
+        .hero {
+            background: linear-gradient(135deg, #0A0A0A 0%, #1a0a0a 50%, #0a0a1a 100%);
+            padding: 5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(229,9,20,0.08) 0%, transparent 70%);
+        }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            color: var(--gold);
+            letter-spacing: 5px;
+            line-height: 1;
+            position: relative;
+        }
+
+        .hero-title span { color: var(--red); }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin: 1rem 0 2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        /* SECTIONS */
+        .section {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold-dark), transparent);
+        }
+
+        .section-title .accent { color: var(--gold); }
+
+        /* MOVIE CARDS */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .movie-card {
+            background: var(--dark3);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+            display: block;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 40px rgba(255,215,0,0.15);
+        }
+
+        .movie-poster {
+            width: 100%;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            display: block;
+            background: var(--dark4);
+        }
+
+        .movie-poster-placeholder {
+            width: 100%;
+            aspect-ratio: 2/3;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--gold);
+        }
+
+        .movie-info {
+            padding: 1rem;
+        }
+
+        .movie-title {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .badge-now { background: var(--red); color: #fff; }
+        .badge-upcoming { background: var(--gold); color: #000; }
+        .badge-genre { background: var(--dark4); color: var(--gold); border: 1px solid var(--border); }
+
+        /* BUTTONS */
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.8rem;
+            border-radius: 4px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-primary:hover { background: #c4070f; transform: translateY(-1px); }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #000;
+        }
+
+        .btn-gold:hover { background: #e6c200; transform: translateY(-1px); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .btn-outline:hover { background: var(--gold); color: #000; }
+
+        /* FORMS */
+        .form-group { margin-bottom: 1.2rem; }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background: var(--dark3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            padding: 0.7rem 1rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        textarea { resize: vertical; min-height: 100px; }
+
+        /* MESSAGES */
+        .messages { padding: 0 2rem; }
+        .alert {
+            max-width: 1300px;
+            margin: 1rem auto;
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .alert-success { background: rgba(40,167,69,0.15); border: 1px solid #28a745; color: #28a745; }
+        .alert-error { background: rgba(229,9,20,0.15); border: 1px solid var(--red); color: #ff4d57; }
+
+        /* STARS */
+        .stars { color: var(--gold); letter-spacing: 2px; }
+
+        /* FOOTER */
+        footer {
+            background: var(--dark2);
+            border-top: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+
+        footer .footer-logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+
+        /* PAGE HEADER */
+        .page-header {
+            background: linear-gradient(180deg, var(--dark2) 0%, var(--dark) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .page-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: var(--gold);
+            letter-spacing: 4px;
+        }
+
+        .page-header p { color: var(--text-muted); margin-top: 0.5rem; }
+
+        /* DIVIDER */
+        .divider { height: 1px; background: var(--border); margin: 2rem 0; }
+
+        /* CARD */
+        .card {
+            background: var(--dark3);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <div class="nav-inner">
+            <a href="{% url 'home' %}" class="logo">
+                <i class="fas fa-film"></i> Cine<span>Verse</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{% url 'home' %}"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="{% url 'movie_list' %}"><i class="fas fa-clapperboard"></i> Now Showing</a></li>
+                <li><a href="{% url 'upcoming' %}"><i class="fas fa-calendar-alt"></i> Upcoming</a></li>
+                <li><a href="{% url 'check_booking' %}"><i class="fas fa-ticket"></i> My Booking</a></li>
+                <li><a href="{% url 'feedback' %}"><i class="fas fa-star"></i> Feedback</a></li>
+                <li><a href="{% url 'movie_list' %}" class="btn-book"><i class="fas fa-ticket-alt"></i> Book Now</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-logo"><i class="fas fa-film"></i> CineVerse</div>
+        <p>© 2024 CineVerse Cinema. Premium movie experience.</p>
+        <p style="margin-top:0.5rem; font-size:0.75rem;">
+            <a href="{% url 'home' %}" style="color:var(--gold); text-decoration:none; margin:0 0.5rem;">Home</a> |
+            <a href="{% url 'movie_list' %}" style="color:var(--gold); text-decoration:none; margin:0 0.5rem;">Movies</a> |
+            <a href="{% url 'feedback' %}" style="color:var(--gold); text-decoration:none; margin:0 0.5rem;">Feedback</a>
+        </p>
+    </footer>
+</body>
+</html>
